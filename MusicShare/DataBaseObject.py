@@ -151,8 +151,8 @@ class DatabasePopulate(Algo):
             self.FileInsert.append([song_title.lower(),
             song_album.lower(),
             song_artist.lower(),
-            song_path.decode('latin-1')
-            ])
+            song_path.decode('UTF-8')
+            ])#on must decode using system default encoding
         
     
     def childrens(self, Path):
