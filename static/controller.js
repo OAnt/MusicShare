@@ -32,6 +32,9 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 		$scope.songsList.push(aSong);
 		$scope.songNumber++;
 		audio.autoplay = false
+		if ($scope.songNumber == 1) {
+			$scope.activeSong = $scope.songsList[0];
+		};
 	};
 	
 	$scope.remSong = function(aSong) {
