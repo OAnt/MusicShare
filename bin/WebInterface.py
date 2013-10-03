@@ -11,8 +11,8 @@ from web import form
 import MusicShare.utils as utils
 
 
-USRDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/usrDB.db'
-MUSICDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db'
+USRDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/usrDB2.db'
+#MUSICDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db'
 COOKIEDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/cookieDB.db'
 BASESALT = bcrypt.gensalt()
 web.config.debug = False
@@ -30,6 +30,7 @@ song_properties = ['Song', 'Album', 'Artist']
 urls = (
         '/', 'index',
         '/playlist/','playlist',
+        '/rplaylist/', 'rplaylist',
         '/login/','login',
         '/logout/','logout',
         '/signin/', 'signin',
@@ -104,6 +105,7 @@ def search_songs(song_title, song_album, song_artist, database):
                                 element[3].title()])
             temp_dict["key"] = temp_str
             temp_dict["value"] = element[4]
+            temp_dict["id"] = element[0]
             transmit.append(temp_dict)
     return transmit
 
@@ -113,17 +115,43 @@ class index:
         return render.index()
 
     def POST(self):
+        mydata = local_db()
         json_data = json_parser(web.data(), song_properties)
-        mydata = threading.local()
         #print json_data
-        if not hasattr(mydata, "database"):
-            mydata.database = utils.simple_db(MUSICDATABASE)
-        
         transmit = search_songs(json_data["Song"],
                                 json_data["Album"],
                                 json_data["Artist"],
                                 mydata.database)
-        
+        return json.dumps(transmit)
+
+class rplaylist:
+    def POST(self):
+        mydata = local_db()
+
+        json_data = json.loads(web.data())
+        list_id = json_data[0]
+        statement = """
+        SELECT Songs.Song, Songs.Album, Songs.Artist, Songs.path
+        FROM belong, Songs
+        WHERE belong.playlist = ? AND belong.song = Songs.id;
+        """
+        result = mydata.database.sql_execute(statement, [list_id])
+
+        print result
+        transmit = []
+
+        if result:
+            for element in result:
+                temp_dict = {}
+                temp_str = " in ".join([element[1].title(),
+                                    element[2].title()])
+                temp_str = " by ".join([temp_str,
+                                    element[3].title()])
+                temp_dict["key"] = temp_str
+                temp_dict["value"] = element[4]
+                temp_dict["id"] = element[0]
+                transmit.append(temp_dict)
+
         return json.dumps(transmit)
 
 class playlist:
@@ -138,7 +166,7 @@ class playlist:
             user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
 
             statement = """
-            SELECT * FROM playlist WHERE owner = ?;
+            SELECT id, name FROM playlist WHERE owner = ?;
             """
             result = mydata.database.sql_execute(statement, [user])
             return json.dumps(result)
@@ -150,7 +178,7 @@ class playlist:
 
         json_data = json.loads(web.data())
         list_name = json_data[0]
-        playlist = json.dumps(json_data[1])
+        playlist = json_data[1]
         session_id = web.cookies().get("session_cookie")
         if session_id:
             statement = """
@@ -159,12 +187,29 @@ class playlist:
             user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
             #print list_name, playlist
             statement = """
-            INSERT INTO playlist (name, list, owner) VALUES (?,?,?);
+            INSERT INTO playlist (name, owner) VALUES (?,?);
             """
             result = mydata.database.sql_execute(statement, 
                                                     [list_name,
-                                                    playlist,
                                                     user])
+            statement = """
+            SELECT id FROM playlist where name = ? and owner = ?;
+            """
+
+            result = mydata.database.sql_execute(statement, 
+                                                    [list_name,
+                                                    user])
+            an_id = result[0]
+
+            for song in playlist:
+
+                statement = """
+                INSERT INTO belong (playlist, song) Values (?, ?);
+                """
+                
+                result = mydata.database.sql_execute(statement, 
+                                                        [an_id,
+                                                        song["id"]])
             return "true"
         else:
             return "false"
@@ -246,7 +291,7 @@ class signin:
         result = mydata.database.sql_execute(statement, [json_data["name"]])
         
         if not result:
-            comp_hash, salt = cred_gen(json_data["password"])
+            comp_hash, salt = cred_gen(json_data["password"].encode("UTF-8"))
             statement = """
             INSERT INTO users (name, hash, salt) VALUES (?, ?, ?);
             """
@@ -260,8 +305,6 @@ class signin:
 class upload:
     def POST(self):
         mydata = local_db()
-        if not hasattr(mydata, "music_database"):
-            mydata.music_database = utils.simple_db(MUSICDATABASE)
         session_id = web.cookies().get("session_cookie")
         #print session_id
         if session_id:
@@ -278,7 +321,7 @@ class upload:
             
             for song in parsed_list:
                 name, album, artist = song
-                matching = search_songs(name, album, artist, mydata.music_database)
+                matching = search_songs(name, album, artist, mydata.database)
                 for item in matching:
                     song_list.append(item)
             #print song_list

@@ -22,86 +22,22 @@ class database(simple_db):
     def __init__(self, data_path):
         self.database = sqlite3.connect(data_path)
         self.db_cursor = self.database.cursor()
-        self.TableArray = {}
-        self.Index = {}
     
     def insert_song(self, data_list):
         SQL = """INSERT INTO Songs     
-            (id, Song, Album, Artist, path) VALUES (?,?,?,?,?);
+            (Song, Album, Artist, path) VALUES (?,?,?,?);
             """
             
-        self.insertion(SQL,'Songs',data_list)    
+        self.insertion(SQL,data_list)    
             
-    def insertion(self,SQL,Table,data_list):
-    
-        for Item in data_list:
-            Item.insert(0,self.Index[Table])
-            self.Index[Table] = self.Index[Table] + 1
-        
-        
+    def insertion(self,SQL,data_list):
         self.db_cursor.executemany(SQL, data_list)
         self.database.commit()
             
-    def read_database(self):
-        
-        """returns tables from a database"""
-        SQLstatement = """
-            SELECT * FROM sqlite_master WHERE type='table';
-            """
-        TempDict = {}
-        TableList = self.sql_execute(SQLstatement,[])
-        if TableList[0]:
-            for Item in TableList[0]:
-                self.TableArray[Item[2]] = []
-        
-        SQLstatement = """
-            PRAGMA table_info({0});
-            """
-        for Item in self.TableArray.keys():
-            if not sqlite3.complete_statement(Item):
-                Transmitted = SQLstatement.format(Item)
-                ColumnNames = self.sql_execute(Transmitted,[])
-                ColumnList = ColumnNames[0].fetchall()
-                RowList = []
-                for Col in ColumnList:
-                    RowList.append(Col[1])
-                self.TableArray[Item].append(RowList)
-                
-        SQLstatement = """
-            SELECT * FROM {0};
-            """
-        for Item in self.TableArray.keys():
-            if not sqlite3.complete_statement(Item):
-                Transmitted = SQLstatement.format(Item)
-                Rows  = self.sql_execute(Transmitted, [])
-                for Row in Rows[0]:
-                    LRow = list(Row)
-                    self.TableArray[Item].append(LRow)
-                
-                
-        SQL = """
-            SELECT ROWID FROM {0};
-            """
-        for Item in self.TableArray.keys():
-            if not sqlite3.complete_statement(Item):
-                Transmitted = SQLstatement.format(Item)
-                IDs = self.sql_execute(Transmitted,[])
-                LastID = IDs.pop()
-                self.Index[Item] = LastID
-                
     def creation_database(self):
-        LogList = []
-        SQL = """CREATE TABLE Songs (
-            id INTEGER PRIMARY KEY,
-            Song TEXT,
-            Album TEXT,
-            Artist TEXT,
-            path TEXT
-            );
-            """
-        self.Index['Songs'] = 0
-        self.sql_execute(SQL,[])
-                
+        with open('music.sql', mode='r') as f:
+            self.sql_script(f.read())
+
 class DatabasePopulate(Algo):
     """ This class takes the initial path to give associated
     directories

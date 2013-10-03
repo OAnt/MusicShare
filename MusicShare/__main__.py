@@ -11,18 +11,18 @@ PathName = "_".join(PathNameList)
 DataPath = "/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db".format(PathName)
 
 Recalculate = True
-usrdb_rewrite = False
+usrdb_rewrite = True
 
 print not(os.path.isfile(DataPath))
 
 if Recalculate or not(os.path.isfile(DataPath)):
 	print "Reindexing files and directories"
-	Algorithm = DBO.DatabasePopulate(Path, DataPath)
+	Algorithm = DBO.DatabasePopulate(Path, WebInterface.USRDATABASE)
 	Algorithm.calculate_list_path()
 	
 if usrdb_rewrite or not(os.path.isfile(WebInterface.USRDATABASE)):
     print "Reinitiating user database"
     conn = sqlite3.connect(WebInterface.USRDATABASE)
-    with open(WebInterface.USRDATABASE, mode='r') as f:
+    with open('schema.sql', mode='r') as f:
         conn.cursor().executescript(f.read())
     conn.commit()

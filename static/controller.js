@@ -76,12 +76,14 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	};
 	
 	$scope.loadList = function(aList) {
-		$scope.songsList = JSON.parse(aList[2]);
-		$scope.songNumber = $scope.songsList.length;
-		$scope.songBeingPlayed = 0;
-		$scope.changeSong();
-		audio.autoplay = false
-		
+        $http.post('/rplaylist/', aList[0]).success(function(data) {
+            
+            $scope.songsList = data;
+            $scope.songNumber = $scope.songsList.length;
+            $scope.songBeingPlayed = 0;
+            $scope.changeSong();
+            audio.autoplay = false
+	    });	
 	};
 	
 	$scope.dropList = function(aList) {
