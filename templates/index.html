@@ -53,18 +53,6 @@
 						
 				</div>
 			</div>
-
-			<div class="row">
-				<div class="col-xs-6 col-sm-6 col-md-6">
-					<h2>Upload list</h2>
-						
-						<form novalidate> 
-							<input id="fileInput" class="btn btn-xs btn-default" type="file" ng-model="file" /><br />
-						</form>
-						
-				</div>
-			</div>
-			
 			
 			<div class="row">
 				<div class="col-xs-12 col-sm-12 col-md-12">
@@ -120,6 +108,18 @@
 						</ul>
 				</div>
 			</div>
+
+			<div ng-show="logged.loggedin" class="row">
+				<div class="col-xs-6 col-sm-6 col-md-6">
+					<h2>Upload list</h2>
+						
+						<form novalidate> 
+							<input id="fileInput" class="btn btn-xs btn-default" type="file" ng-model="file" /><br />
+						</form>
+						
+				</div>
+			</div>
+			
 		</div>
 	</div>
 	<div class="col-xs-3 col-sm-3 col-md-3">
