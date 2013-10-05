@@ -23,11 +23,11 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	$scope.search = function(description) {
 		$scope.transmit = description
 		$http.post('/', description).success(function(data) {
-	        //console.log(data);
-            if (data != "null") {	
-                $scope.songs = data;
-                $scope.songSelection = true;
-            };
+			//console.log(data);
+			if (data != "false") {	
+				$scope.songs = data;
+				$scope.songSelection = true;
+			};
 		});
 	};
 	
