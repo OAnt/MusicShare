@@ -68,6 +68,20 @@ def json_parser(web_data, attribute_list):
             json_data[an_attr] = ""
     return json_data
 
+def dictize_songs(db_res):
+    transmit = []
+    for element in db_res:
+        temp_dict = {}
+        temp_str = " in ".join([element[1].title(),
+                            element[2].title()])
+        temp_str = " by ".join([temp_str,
+                            element[3].title()])
+        temp_dict["key"] = temp_str
+        temp_dict["value"] = element[4]
+        temp_dict["id"] = element[0]
+        transmit.append(temp_dict)
+    return transmit
+
 def search_songs(song_title, song_album, song_artist, database):
     sql_statement = ["SELECT * FROM Songs"]
     values = []
@@ -93,21 +107,11 @@ def search_songs(song_title, song_album, song_artist, database):
         values.append("%{0}%".format(song_artist))
     
     result = database.sql_execute("".join(sql_statement), values)
-    
-    transmit = []
-    
     if result:
-        for element in result:
-            temp_dict = {}
-            temp_str = " in ".join([element[1].title(),
-                                element[2].title()])
-            temp_str = " by ".join([temp_str,
-                                element[3].title()])
-            temp_dict["key"] = temp_str
-            temp_dict["value"] = element[4]
-            temp_dict["id"] = element[0]
-            transmit.append(temp_dict)
-    return transmit
+        transmit = dictize_songs(result)
+        return transmit
+    else:
+        return False
 
 class index:
     def GET(self):
@@ -129,30 +133,17 @@ class rplaylist:
         mydata = local_db()
 
         json_data = json.loads(web.data())
-        list_id = json_data[0]
+        list_id = json_data
         statement = """
-        SELECT Songs.Song, Songs.Album, Songs.Artist, Songs.path
+        SELECT Songs.id, Songs.Song, Songs.Album, Songs.Artist, Songs.path
         FROM belong, Songs
         WHERE belong.playlist = ? AND belong.song = Songs.id;
         """
         result = mydata.database.sql_execute(statement, [list_id])
 
-        print result
-        transmit = []
-
         if result:
-            for element in result:
-                temp_dict = {}
-                temp_str = " in ".join([element[1].title(),
-                                    element[2].title()])
-                temp_str = " by ".join([temp_str,
-                                    element[3].title()])
-                temp_dict["key"] = temp_str
-                temp_dict["value"] = element[4]
-                temp_dict["id"] = element[0]
-                transmit.append(temp_dict)
-
-        return json.dumps(transmit)
+            transmit = dictize_songs(result)
+            return json.dumps(transmit)
 
 class playlist:
     def GET(self):
@@ -170,9 +161,9 @@ class playlist:
             """
             result = mydata.database.sql_execute(statement, [user])
             return json.dumps(result)
-            
 
-        
+
+
     def POST(self):
         mydata = local_db()
 
@@ -190,25 +181,26 @@ class playlist:
             INSERT INTO playlist (name, owner) VALUES (?,?);
             """
             result = mydata.database.sql_execute(statement, 
-                                                    [list_name,
-                                                    user])
+                    [list_name,
+                    user])
             statement = """
             SELECT id FROM playlist where name = ? and owner = ?;
             """
 
             result = mydata.database.sql_execute(statement, 
-                                                    [list_name,
-                                                    user])
+                    [list_name,
+                    user])
             an_id = result[0]
 
             for song in playlist:
 
+                #print type(an_id), type(song["id"])
                 statement = """
                 INSERT INTO belong (playlist, song) Values (?, ?);
                 """
                 
                 result = mydata.database.sql_execute(statement, 
-                                                        [an_id,
+                                                        [an_id[0],
                                                         song["id"]])
             return "true"
         else:
@@ -219,6 +211,11 @@ class playlist:
         i = web.input(id=None)
         statement = """
         DELETE FROM playlist WHERE id = ?;
+        """
+        mydata.database.sql_execute(statement, 
+                                    [i.id])
+        statement = """
+        DELETE FROM belong where playlist = ?;
         """
         mydata.database.sql_execute(statement, 
                                     [i.id])

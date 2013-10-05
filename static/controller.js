@@ -23,8 +23,11 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	$scope.search = function(description) {
 		$scope.transmit = description
 		$http.post('/', description).success(function(data) {
-			$scope.songs = data;
-			$scope.songSelection = true;
+	        //console.log(data);
+            if (data != "null") {	
+                $scope.songs = data;
+                $scope.songSelection = true;
+            };
 		});
 	};
 	
@@ -102,6 +105,8 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 			$scope.logged.show = false;
 		} else {
 			$scope.logged.show = true;
+            $scope.error.description = ""
+            $scope.error.bool = false
 		}
 	};
 	
@@ -119,7 +124,9 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	};
 	
 	$scope.connect = function(user) {
-		if( user != undefined){
+	    $scope.error.description = ""
+        $scope.error.bool = false
+        if( user != undefined){
 			$http({withCredentials: true, method: "post", url: "/login/", data: user}).success(function(data) {
 				if(data == "False") {
 					$scope.error.bool = true;
