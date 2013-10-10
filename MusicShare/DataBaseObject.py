@@ -23,7 +23,7 @@ class database(simple_db):
         sql = """UPDATE Songs SET path = ?
             WHERE Song = ? AND Album = ? AND Artist = ?;
             """
-        self.insertion(SQL, data_list)
+        self.insertion(sql, data_list)
 
     def insert_song(self, data_list):
         SQL = """INSERT INTO Songs
