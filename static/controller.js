@@ -159,6 +159,9 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 						// console.log(reader.result);
 						$http({withCredentials: true, method: "post", url: "/upload/", data: reader.result}).success(function(data) {
 							$scope.getLists();
+                            //console.log(fileInput.files);
+                            fileInput.value = null;
+                            //console.log(fileInput.files);
 						});
 					});
 				} else {

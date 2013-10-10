@@ -26,6 +26,10 @@ class simple_db(object):
             print e
             return False
 
+    def insertion(self,SQL,data_list):
+        self.db_cursor.executemany(SQL, data_list)
+        self.database.commit()
+
     def sql_execute(self,statement, List):
         #print "Is SQL", sqlite3.complete_statement(statement), statement
         #DO NOT USE FOR INSERT OR UPDATE ONLY FOR READING
@@ -36,12 +40,6 @@ class simple_db(object):
         except sqlite3.Error as e:
             print e
             return False
-            
-def convert_tuple(ATuple):
-	AList = []
-	for Item in ATuple:
-		AList.append(Item)
-	return AList
 
 def conversion_soft(ASize):
 	Size = ASize

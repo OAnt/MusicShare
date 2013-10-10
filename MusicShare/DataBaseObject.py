@@ -11,10 +11,6 @@ from mutagen.mp4 import MP4
 
 from utils import simple_db, parser, make_eq_dict
 
-
-
-
-
 class Algo(object):
     pass
 
@@ -22,18 +18,19 @@ class database(simple_db):
     def __init__(self, data_path):
         self.database = sqlite3.connect(data_path)
         self.db_cursor = self.database.cursor()
-    
+
+    def update_song(self, data_list):
+        sql = """UPDATE Songs SET path = ?
+            WHERE Song = ? AND Album = ? AND Artist = ?;
+            """
+        self.insertion(SQL, data_list)
+
     def insert_song(self, data_list):
-        SQL = """INSERT INTO Songs     
+        SQL = """INSERT INTO Songs
             (Song, Album, Artist, path) VALUES (?,?,?,?);
             """
-            
-        self.insertion(SQL,data_list)    
-            
-    def insertion(self,SQL,data_list):
-        self.db_cursor.executemany(SQL, data_list)
-        self.database.commit()
-            
+        self.insertion(SQL,data_list)
+
     def creation_database(self):
         with open('music.sql', mode='r') as f:
             self.sql_script(f.read())
@@ -103,9 +100,7 @@ class DatabasePopulate(Algo):
         DirList = []
         FileList = []
         ErrorMsg = "Skipt because this program is not able to handle NTFS junction or accessed denied"
-        
         try:
-    
             Elements = os.listdir(Path)
             for Item in Elements:
                 item_path = os.path.join(Path,Item)
@@ -114,27 +109,25 @@ class DatabasePopulate(Algo):
                     DirList.append(item_path)
                 else:
                     self.mparser(item_path)
-                
         except OSError, E:
             if E.errno == 13:
                 print Path, ErrorMsg
             else:
                 raise E
-                
         return DirList, FileList
     
-    def calculate_list_path(self):
+    def calculate_list_path(self, update):
         """ This method unfold the original path to return a list
         containing all sub directories woth their sizes
         """
         for FatherPath in self.list_path:
             DirList, FileList = self.childrens(FatherPath)
-            
             for Item in DirList:
                 self.list_path.append(Item)
-    
-        self.Data.insert_song(self.FileInsert)
-    
-    def finalization(self):
-        self.Data.read_database()
-        return self.Data
+        if not(update):
+            self.Data.insert_song(self.FileInsert)
+        else:
+            for song in self.FileInsert:
+                temp = song.pop()
+                song.insert(temp, 0)
+            self.Data.update_song(self.FileInsert)

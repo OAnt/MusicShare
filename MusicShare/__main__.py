@@ -1,24 +1,19 @@
 import DataBaseObject as DBO
 import sqlite3
-import os.path
-import bin.WebInterface as WebInterface
 from sys import argv
 
+import bin.WebInterface as WebInterface
+
 script, Path = argv
-PathNameList = Path.split("\\")
-PathNameList.insert(0,"DataBase")
-PathName = "_".join(PathNameList)
-DataPath = "/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db".format(PathName)
 
 Recalculate = True
 usrdb_rewrite = True
 
-print not(os.path.isfile(DataPath))
-
-if Recalculate or not(os.path.isfile(DataPath)):
+if Recalculate or not(os.path.isfile(WebInterface.USRDATABASE)):
 	print "Reindexing files and directories"
 	Algorithm = DBO.DatabasePopulate(Path, WebInterface.USRDATABASE)
-	Algorithm.calculate_list_path()
+	Algorithm.calculate_list_path(True)
+        
 	
 if usrdb_rewrite or not(os.path.isfile(WebInterface.USRDATABASE)):
     print "Reinitiating user database"

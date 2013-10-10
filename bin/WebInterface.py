@@ -8,12 +8,13 @@ import time
 import bcrypt
 from web import form
 
+from Playlist.m3uparser import m3uList
 import MusicShare.utils as utils
 
 
-USRDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/usrDB2.db'
+USRDATABASE = '/home/pi/databases/usrDB2.db'
 #MUSICDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db'
-COOKIEDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/cookieDB.db'
+COOKIEDATABASE = '/home/pi/databases/databases/cookieDB.db'
 BASESALT = bcrypt.gensalt()
 web.config.debug = False
 
@@ -223,41 +224,27 @@ class playlist:
 class login:
     def POST(self):
         mydata = local_db()
-        #beg = time.time()
         json_data = json_parser(web.data(), ["name", "password"])
         username = json_data["name"]
         password = json_data["password"]
-        #print type(password)
         statement = """
-
         SELECT hash, salt FROM users WHERE name = ?;
         """
-        
-        
         result = mydata.database.sql_execute(statement, 
                                             [username])
-        #print "hash access", time.time() - beg
-        #beg = time.time()
         if result:
-
             comp_hash, salt = result[0]
-            #print type(password)
         else:
             comp_hash = False
             salt = False
-        
         if comp_hash and salt:
             hash = password_hash(password.encode('utf-8'),
                                  salt.encode('utf-8'))
         else:
             hash = password_hash(password.encode('utf-8'),
                                  BASESALT.encode('utf-8'))
-        #print "hashing", time.time() - beg
         if hash == comp_hash:
-            #beg = time.time()
             session_id = utils.id_generator()
-            #print "random", time.time() - beg
-            #beg = time.time()
             statement = """
             INSERT INTO cookies (username, session_id) VALUES (?, ?)
             """
@@ -267,7 +254,7 @@ class login:
             return "True"
         else:
             return "False"
-            
+
 class logout:
     def GET(self):
         mydata = local_db()
@@ -312,23 +299,43 @@ class upload:
             #print user
 
             playlist = web.data()
-            parsed_list = utils.itune_list_parser(playlist)
-            
+            parser = m3uList()
+            parser.parse(playlist)
             song_list=[]
-            
-            for song in parsed_list:
-                name, album, artist = song
-                matching = search_songs(name, album, artist, mydata.database)
+            for song in parser:
+                name = song["Title"]
+                artist = song["Artist"]
+                matching = search_songs(name, False, artist, mydata.database)
                 for item in matching:
                     song_list.append(item)
             #print song_list
+            list_name = "list"+str(time.time())
             statement = """
-            INSERT INTO playlist (name, list, owner) VALUES (?,?,?);
+            INSERT INTO playlist (name,  owner) VALUES (?,?);
             """
             result = mydata.database.sql_execute(statement, 
-                                                    ["list"+str(time.time()),
-                                                    json.dumps(song_list),
+                                                    [list_name,
                                                     user])
+            statement = """
+            SELECT id FROM playlist where name = ? and owner = ?;
+            """
+
+            result = mydata.database.sql_execute(statement, 
+                    [list_name,
+                    user])
+            #print result
+            an_id = result[0]
+
+            for song in song_list:
+
+                #print type(an_id), type(song["id"])
+                statement = """
+                INSERT INTO belong (playlist, song) Values (?, ?);
+                """
+                
+                result = mydata.database.sql_execute(statement, 
+                                                        [an_id[0],
+                                                        song["id"]])
 
                 
             
