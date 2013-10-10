@@ -14,7 +14,7 @@ import MusicShare.utils as utils
 
 USRDATABASE = '/home/pi/databases/usrDB2.db'
 #MUSICDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db'
-COOKIEDATABASE = '/home/pi/databases/databases/cookieDB.db'
+COOKIEDATABASE = '/home/pi/databases/cookieDB.db'
 BASESALT = bcrypt.gensalt()
 web.config.debug = False
 
