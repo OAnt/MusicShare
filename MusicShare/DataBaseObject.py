@@ -130,5 +130,5 @@ class DatabasePopulate(Algo):
         else:
             for song in self.FileInsert:
                 temp = song.pop()
-                song.insert(temp, 0)
+                song.insert(0, temp)
             self.Data.update_song(self.FileInsert)
