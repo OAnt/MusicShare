@@ -44,7 +44,7 @@ class DatabasePopulate(Algo):
     def __init__(self, init_path, database_path):
         self.list_path = [init_path]
         self.Data = database(database_path) #Uses the class
-        self.Data.creation_database()
+        
         #constants
         self.FileInsert = []
         self.DirInsert = []
@@ -125,6 +125,7 @@ class DatabasePopulate(Algo):
             for Item in DirList:
                 self.list_path.append(Item)
         if not(update):
+            self.Data.creation_database()
             self.Data.insert_song(self.FileInsert)
         else:
             for song in self.FileInsert:

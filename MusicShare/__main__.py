@@ -7,7 +7,7 @@ import bin.WebInterface as WebInterface
 script, Path = argv
 
 Recalculate = True
-usrdb_rewrite = True
+usrdb_rewrite = False
 
 if Recalculate or not(os.path.isfile(WebInterface.USRDATABASE)):
 	print "Reindexing files and directories"
