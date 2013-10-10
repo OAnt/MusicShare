@@ -1,7 +1,7 @@
 import DataBaseObject as DBO
 import sqlite3
 from sys import argv
-
+import os.path
 import bin.WebInterface as WebInterface
 
 script, Path = argv
