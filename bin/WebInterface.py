@@ -14,7 +14,7 @@ from Playlist.m3uparser import m3uList
 import MusicShare.utils as utils
 
 
-USRDATABASE = '/home/pi/databases/usrDB2.db'
+USRDATABASE = '/home/pi/databases/usrDB3.db'
 #MUSICDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db'
 COOKIEDATABASE = '/home/pi/databases/cookieDB.db'
 BASESALT = bcrypt.gensalt()
@@ -85,6 +85,22 @@ def dictize_songs(db_res):
         transmit.append(temp_dict)
     return transmit
 
+def third_search_songs(song_data, database):
+    sql_statement = ["SELECT Songs.id, Songs.song, albums.album, artists.name, Songs.path FROM Songs, albums, artists WHERE Songs.album_id=albums.id AND albums.artist_id=artists.id"]
+    values = []
+    search_dict = {"Song": " AND Songs.song LIKE ?",
+                    "Album": " AND albums.album LIKE ?",
+                    "Artist": " AND artists.name LIKE ?"}
+    for an_attr in song_data:
+        sql_statement.append(search_dict[an_attr])
+        values.append("%{0}%".format(song_data[an_attr]))
+    result = database.sql_execute("".join(sql_statement), values)
+    if result:
+        transmit = dictize_songs(result)
+        return transmit
+    else:
+        return False
+
 def search_songs(song_title, song_album, song_artist, database):
     sql_statement = ["SELECT * FROM Songs"]
     values = []
@@ -118,16 +134,14 @@ def search_songs(song_title, song_album, song_artist, database):
 
 class index:
     def GET(self):
-        web.setcookie("session_cookie", "", expires=-1)
         return render.index()
 
     def POST(self):
         mydata = local_db()
-        json_data = json_parser(web.data(), song_properties)
-        #print json_data
-        transmit = search_songs(json_data["Song"],
-                                json_data["Album"],
-                                json_data["Artist"],
+        #json_data = json_parser(web.data(), song_properties)
+        json_data = json.loads(web.data())
+        print json_data
+        transmit = third_search_songs(json_data,
                                 mydata.database)
         return json.dumps(transmit)
 
@@ -224,6 +238,16 @@ class playlist:
                                     [i.id])
             
 class login:
+    def GET(self):
+        mydata = local_db()
+        session_id = web.cookies().get("session_cookie")
+        if session_id:
+            statement = """
+            SELECT username FROM cookies WHERE session_id = ?
+            """
+            user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
+            return json.dumps(user)
+
     def POST(self):
         mydata = local_db()
         json_data = json_parser(web.data(), ["name", "password"])

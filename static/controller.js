@@ -225,12 +225,16 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 		$scope.activeSong = $scope.songsList[$scope.songBeingPlayed];
 	};
 	
-	// $scope.upLoad = function(file) {
-		// console.log(file)
-		// $http({withCredentials: true, method: "post", url: "/upload/", data: file}).success(function(data) {
-			// $scope.getLists();
-		// });
-	// };
+    var init : function() {
+        $http.get('login/').success(function(data){
+            if(data) {
+					$scope.error.bool = true;
+					$scope.logged.show = false;
+					$scope.logged.loggedin = true;
+					$scope.logged.name = user;
+					$scope.getLists();
+            }
+        });
 	
 }
 
