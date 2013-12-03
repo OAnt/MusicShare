@@ -7,9 +7,6 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	$scope.playList = [];
 	$scope.songNumber = 0;
 	$scope.loadedLists = [];
-	$scope.error = new Object();
-	$scope.logged = new Object();
-	$scope.logged.loggedin = false;
 	$scope.logged.show = false;
 	$scope.logged.name = "";
 	$scope.songSelection = false;
@@ -102,53 +99,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 		}
 	}
 	
-	$scope.login = function() {
-		if($scope.logged.show) {
-			$scope.logged.show = false;
-		} else {
-			$scope.logged.show = true;
-            $scope.error.description = ""
-            $scope.error.bool = false
-		}
-	};
-	
-	$scope.logout = function() {
-		$http.get(baseUrl + '/logout/')
-		$scope.logged.loggedin = false;
-		$scope.logged.show = false;
-		$scope.songsList = [];
-		$scope.playList = [];
-		$scope.songNumber = 0;
-		$scope.loadedLists = [];
-		$scope.songSelection = false;
-		$scope.playListBool = false;
-		$scope.songBeingPlayed = 0;
-	};
-	
-	$scope.connect = function(user) {
-	    $scope.error.description = ""
-        $scope.error.bool = false
-        if( user != undefined){
-			$http({withCredentials: true, method: "post", url: baseUrl + "/login/", data: user}).success(function(data) {
-				if(data == "False") {
-					$scope.error.bool = true;
-					$scope.error.description = "login error";
-					user.name = "";
-					user.password = "";
-				}
-				else {
-					$scope.error.bool = true;
-					$scope.logged.show = false;
-					$scope.logged.loggedin = true;
-					$scope.logged.name = user.name;
-					user.name = "";
-					user.password = "";
-					$scope.getLists();
-					//$location.path("/");
-				}
-			});
-		}
-	};
+
 	
 	fileInput.addEventListener("change", function() {
 		var reader = new FileReader()
@@ -225,83 +176,19 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 		$scope.activeSong = $scope.songsList[$scope.songBeingPlayed];
 	};
 	
-    var init : function() {
+    var init = function() {
         $http.get('login/').success(function(data){
             if(data) {
-					$scope.error.bool = true;
-					$scope.logged.show = false;
-					$scope.logged.loggedin = true;
-					$scope.logged.name = user;
-					$scope.getLists();
+                $scope.logged.loggedin = true;
+                $scope.logged.name = user;
+                $scope.getLists();
+            } else {
+                $scope.logged.loggedin = false;
             }
         });
+    };
+
+    init();
 	
 }
 
-function SignInCtrl($scope, $http) {
-	$scope.signinForm = new Object();
-	$scope.signinForm.show = "false";
-	$scope.error = new Object();
-	$scope.error.bool = false;
-	
-        var baseUrl = "/musicshare/";
-	$scope.signin = function() {
-		if ($scope.signinForm.show) {
-			$scope.signinForm.show = false;
-		} else {
-			$scope.signinForm.show = true;
-		}
-	};
-	
-	$scope.sign = function(user) {
-			if (user != undefined && user.name != undefined && user.password != undefined && user.password == user.passwordConf){
-				var userData = new Object();
-				userData.name = user.name
-				userData.password = user.password
-				$http({withCredentials: true, method: "post", url: baseUrl + "/signin/", data: userData}).success(function(data) {
-					if (data == "true") {
-						$scope.error.bool = false;
-						$scope.signinForm.show = "false";
-						var msg = user.name + " successfully registered"
-						window.alert(msg)
-						user.name = ""
-						user.password = ""
-						user.passwordConf = ""
-					} else {
-						$scope.error.bool = true;
-						$scope.error.description = "User already exists";
-						user.name = ""
-						user.password = ""
-						user.passwordConf = ""
-					}
-				});
-			} else {
-				console.log(user.password, user.passwordConf)
-				$scope.error.bool = true;
-				$scope.error.description = "Identification error";
-			}
-	};
-}
-
-
-	//$scope.play = function() {
-		
-	//	for (var i = 0; i < $scope.songNumber; i++) {
-	//		var songPath = $scope.songsList[i][1];
-			//$http.get('/Music'+songPath).success(function(aSong) {
-				//$scope.playList.push(aSong);
-		//	var audioElement = $document[0].createElement('audio');
-			//audioElement.src = '/Music'+songPath;
-			//audioElement.play();
-			//aSong.play()
-			//});
-		//};
-	//};
-	
-	// $scope.$watch('$document.find("audio")[0].ended', function() {
-		// var ended = $document.find('audio')[0].ended
-		// console.log(ended)
-		// if (ended) {
-			// $scope.nextSong()
-		// }
-	// },true);
