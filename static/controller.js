@@ -225,7 +225,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 		$scope.activeSong = $scope.songsList[$scope.songBeingPlayed];
 	};
 	
-    var init : function() {
+    var init = function() {
         $http.get('login/').success(function(data){
             if(data) {
 					$scope.error.bool = true;
@@ -235,6 +235,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 					$scope.getLists();
             }
         });
+    }
 	
 }
 
