@@ -3,13 +3,12 @@
 <head>
 <title> MusicShare </title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="static/angular.js"></script>
+<script src="/static/angular.js"></script>
 <script src="static/controller.js"></script>
-<link href="static/css/bootstrap.css" rel="stylesheet">
-<link href="static/plus.css" rel="stylesheet">
+<link href="/static/css/bootstrap.css" rel="stylesheet">
 </head>
 <!--{% endraw %} used for jinja2 templates with flask-->
-<body class="zzz">
+<body class="jumbotron">
 <div class="container">
 <div class="row">
 	<div class="col-xs-6 col-sm-6 col-md-6">
@@ -60,7 +59,7 @@
 						
 					<h2>Player</h2>
 					<p class="text-muted"><b>Song being played:</b> {{activeSong.key}}</p>
-					<p><audio ng-src="{{'/Music' + activeSong.value}}" type="audio/mpeg" controls></audio></p>
+					<p><audio ng-src="{{activeSong.value}}" type="audio/mpeg" controls></audio></p>
 					<button class="btn btn-xs btn-default" ng-click="prevSong()">Prev</button><button class="btn btn-xs btn-default" ng-click="nextSong()">Next</button>
 				
 				</div>

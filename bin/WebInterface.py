@@ -1,3 +1,5 @@
+#! /home/pi/.virtualenvs/MusicShare/bin/python
+
 import threading
 import os.path
 import web
@@ -18,10 +20,10 @@ COOKIEDATABASE = '/home/pi/databases/cookieDB.db'
 BASESALT = bcrypt.gensalt()
 web.config.debug = False
 
-render = web.template.render('templates/')
+render = web.template.render('/home/pi/projects/MusicShare/templates/')
 
 db = utils.simple_db(COOKIEDATABASE)
-with open("cookie.sql", 'r') as c:
+with open("/home/pi/projects/MusicShare/cookie.sql", 'r') as c:
     db.sql_script(c.read())
 db.exit()
 
@@ -348,4 +350,6 @@ def header_processor(handle):
 app.add_processor(header_processor)
 
 if __name__ == "__main__":
-    app.run()            
+    func = app.wsgifunc()
+    web.httpserver.runsimple(func, ('localhost', 8000))
+    #app.run()            

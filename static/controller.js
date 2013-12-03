@@ -16,13 +16,15 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	$scope.playListBool = false;
 	$scope.songBeingPlayed = 0;
 	$scope.activeSong = false;
+
+        var baseUrl = "/musicshare/";
 	
 	var audio = $document.find('audio')[0]
 	var fileInput = document.getElementById('fileInput')
 	
 	$scope.search = function(description) {
 		$scope.transmit = description
-		$http.post('/', description).success(function(data) {
+		$http.post(baseUrl, description).success(function(data) {
 			//console.log(data);
 			if (data != "false") {	
 				$scope.songs = data;
@@ -53,7 +55,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 		var name = window.prompt("Please name the list", "something");
 		//console.log("data");
 		//name = "zzz";
-		$http.post('/playlist/', [name, $scope.songsList]).success(function(data) {
+		$http.post(baseUrl + 'playlist/', [name, $scope.songsList]).success(function(data) {
 			if (data == "true") {
 				$scope.getLists();
 			}
@@ -67,7 +69,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	
 	
 	$scope.getLists = function() {
-		$http.get('/playlist/').success(function(data) {
+		$http.get(baseUrl + '/playlist/').success(function(data) {
 			//console.log(data);
 			if (data != "None") {
 				$scope.loadedLists = data;
@@ -79,7 +81,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	};
 	
 	$scope.loadList = function(aList) {
-        $http.post('/rplaylist/', aList[0]).success(function(data) {
+        $http.post(baseUrl + '/rplaylist/', aList[0]).success(function(data) {
             
             $scope.songsList = data;
             $scope.songNumber = $scope.songsList.length;
@@ -92,7 +94,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	$scope.dropList = function(aList) {
 		var name = window.prompt("Verify the name of list to drop", "");
 		if (name == aList[1]) {
-			$http.delete('/playlist/?id=' + aList[0]).success(function() {
+			$http.delete(baseUrl + '/playlist/?id=' + aList[0]).success(function() {
 				var msg = aList[1] + " successfully dropped";
 				window.alert(msg);
 				$scope.getLists();
@@ -111,7 +113,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	};
 	
 	$scope.logout = function() {
-		$http.get('/logout/')
+		$http.get(baseUrl + '/logout/')
 		$scope.logged.loggedin = false;
 		$scope.logged.show = false;
 		$scope.songsList = [];
@@ -127,7 +129,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	    $scope.error.description = ""
         $scope.error.bool = false
         if( user != undefined){
-			$http({withCredentials: true, method: "post", url: "/login/", data: user}).success(function(data) {
+			$http({withCredentials: true, method: "post", url: baseUrl + "/login/", data: user}).success(function(data) {
 				if(data == "False") {
 					$scope.error.bool = true;
 					$scope.error.description = "login error";
@@ -157,7 +159,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 				if (i == files.length - 1) {
 					reader.onloadend = (function() { 
 						// console.log(reader.result);
-						$http({withCredentials: true, method: "post", url: "/upload/", data: reader.result}).success(function(data) {
+						$http({withCredentials: true, method: "post", url: baseUrl + "/upload/", data: reader.result}).success(function(data) {
 							$scope.getLists();
                             //console.log(fileInput.files);
                             fileInput.value = null;
@@ -167,7 +169,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 				} else {
 					reader.onloadend = (function() { 
 						// console.log(reader.result);
-						$http({withCredentials: true, method: "post", url: "/upload/", data: reader.result})
+						$http({withCredentials: true, method: "post", url: baseUrl + "/upload/", data: reader.result})
 					});
 				}
 			}
@@ -238,6 +240,7 @@ function SignInCtrl($scope, $http) {
 	$scope.error = new Object();
 	$scope.error.bool = false;
 	
+        var baseUrl = "/musicshare/";
 	$scope.signin = function() {
 		if ($scope.signinForm.show) {
 			$scope.signinForm.show = false;
@@ -251,7 +254,7 @@ function SignInCtrl($scope, $http) {
 				var userData = new Object();
 				userData.name = user.name
 				userData.password = user.password
-				$http({withCredentials: true, method: "post", url: "/signin/", data: userData}).success(function(data) {
+				$http({withCredentials: true, method: "post", url: baseUrl + "/signin/", data: userData}).success(function(data) {
 					if (data == "true") {
 						$scope.error.bool = false;
 						$scope.signinForm.show = "false";
