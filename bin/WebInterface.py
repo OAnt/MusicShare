@@ -276,7 +276,7 @@ class login:
             """
             mydata.cookieDB.sql_execute(statement, [username, session_id])
             #print "cookie db", time.time() - beg
-            web.setcookie("session_cookie", session_id, expires="3600")
+            web.setcookie("session_cookie", session_id, expires="3600", secure=True)
             return "True"
         else:
             return "False"

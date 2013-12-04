@@ -9,144 +9,81 @@
 </head>
 <!--{% endraw %} used for jinja2 templates with flask-->
 <body class="jumbotron">
-<div class="container">
-<div class="row">
-	<div class="col-xs-6 col-sm-6 col-md-6">
-		<div  ng-controller="SongSearchCtrl" >
-			<div class="row">
-				<div class="col-xs-6 col-sm-6 col-md-6">
+<div>
+    <div  ng-controller="SongSearchCtrl" >
+        <div class="row">
+            <div class="col-xs-4 col-sm-4 col-md-4">
+                <h2>Search Songs</h2>
+                    <form novalidate> 
+                        <input type="text" class="form-control" placeholder="Song" autofocus ng-model="description.Song" /><br />
+                        <input type="text" class="form-control" placeholder="Album" ng-model="description.Album" /><br />
+                        <input type="text" class="form-control" placeholder="Artist" autofocus  ng-model="description.Artist" /><br />
+                        <button class="btn btn-primary" ng-click="search(description)">Search</button>
+                    </form>
 
-					<div ng-switch on="logged.loggedin">
-						<div ng-switch-when="true">
-							<p class="text-muted">logged as: {{logged.name}} <a href="" ng-click="logout()">logout</a></p>
-						</div>
-						<div ng-switch-default>
-							<a href="" ng-click="login()">login</a>
-						</div>
-					</div>
-					<div ng-switch on="logged.show" class="span2">
-						<div ng-switch-when="true">
-							<div ng-switch on="error.bool">
-								<div ng-swith-when="true">
-									<p class="text-danger">{{error.description}}</p>
-								</div>
-							</div>
-							<form novalidate>
-								<input type="text" class="form-control" placeholder="Username" autofocus ng-model="user.name"></br>
-								<input type="password" class="form-control" placeholder="Password" ng-model="user.password"></br>
-								<button class="btn btn-primary" ng-click="connect(user)">Connect</button>
-							</form>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-xs-9 col-sm-9 col-md-6">
+            </div>
+            <div class="col-xs-4 col-sm-4 col-md-4">
+                <h2>Player</h2>
+                    <p class="text-muted"><b>Song being played:</b> {{activeSong.key}}</p>
+                    <p><audio ng-src="{{activeSong.value}}" type="audio/mpeg" controls></audio></p>
+                    <button class="btn btn-xs btn-default" ng-click="prevSong()">Prev</button><button class="btn btn-xs btn-default" ng-click="nextSong()">Next</button>
+            </div>
 
-					<h2>Search Songs</h2>
-						<form novalidate> 
-							<input type="text" class="form-control" placeholder="Song" autofocus ng-model="description.Song" /><br />
-							<input type="text" class="form-control" placeholder="Album" ng-model="description.Album" /><br />
-							<input type="text" class="form-control" placeholder="Artist" autofocus  ng-model="description.Artist" /><br />
-							<button class="btn btn-primary" ng-click="search(description)">Search</button>
-						</form>
-						
-				</div>
-			</div>
-			
-			<div class="row">
-				<div class="col-xs-12 col-sm-12 col-md-12">
-						
-					<h2>Player</h2>
-					<p class="text-muted"><b>Song being played:</b> {{activeSong.key}}</p>
-					<p><audio ng-src="{{activeSong.value}}" type="audio/mpeg" controls></audio></p>
-					<button class="btn btn-xs btn-default" ng-click="prevSong()">Prev</button><button class="btn btn-xs btn-default" ng-click="nextSong()">Next</button>
-				
-				</div>
-			</div>
-			<div class="row" ng-switch="songSelection">
-				<div ng-switch-when="false"></div>
-				<div class="col-xs-12 col-sm-12 col-md-12" ng-switch-default>
-					<h2>Song Selection</h2>
-						<ul>
-						<li novalidate ng-repeat="aSong in songs">
-							<!--<div class="row">-->
-								{{aSong.key}}<button class="btn btn-xs btn-default" ng-click="addSong(aSong)">Add</button>
-							<!--</div>-->
-						</li>
-						</ul>
-				</div>
-			</div>
-			<div class="row" ng-switch="songNumber">
-				<div ng-switch-when="0"></div>
-				<div class="col-xs-12 col-sm-12 col-md-12" ng-switch-default>
-					<h2>Song List</h2>
+            <div class="col-xs-4 col-sm-4 col-md-4" ng-switch="playListBool">
+                <div ng-switch-when="false"></div>
+                <div  ng-switch-default>
+                    <h2>Playlists</h2>
+                        <ul>
+                            <li ng-repeat="aList in loadedLists">
+                            <p>{{aList[1]}} <button class="btn btn-xs btn-default" ng-click="loadList(aList)">Load</button> <button class="btn btn-xs btn-default" ng-click="dropList(aList)">Drop</button></p>
+                            </li>
+                        </ul>
+                </div>
 
-						<ul>
-							<!--<button ng-click="getLists()">load Playlists</button>-->
-							<li ng-repeat="aSong in songsList">
-								{{aSong.key}}</br><button class="btn btn-xs btn-default" ng-click="moveUp(aSong)">Move Up</button> <button class="btn btn-xs btn-default" ng-click="moveDown(aSong)">Move Down</button> <button class="btn btn-xs btn-default" ng-click="remSong(aSong)">Remove</button>
-							</li>
-						</ul>
-						<div ng-switch on="logged.loggedin">
-							<div ng-switch-when="true">
-							<button class="btn btn-primary" ng-click="saveList()">Save Playlist</button> <button class="btn btn-primary" ng-click="clearList()">Clear Playlist</button>
-							</div>
-							<div ng-switch-default>
-							</div>
-						</div>
-				</div>
-			</div>
-			<div class="row" ng-switch="playListBool">
-				<div ng-switch-when="false"></div>
-				<div class="col-xs-12 col-sm-12 col-md-12" ng-switch-default>
-					<h2>Playlists</h2>
-						<ul>
-							<li ng-repeat="aList in loadedLists">
-							<p>{{aList[1]}} <button class="btn btn-xs btn-default" ng-click="loadList(aList)">Load</button> <button class="btn btn-xs btn-default" ng-click="dropList(aList)">Drop</button></p>
-							</li>
-						</ul>
-				</div>
-			</div>
+                <div ng-show="logged.show">
+                        <h2>Upload list</h2>
+                            <form novalidate> 
+                                <input id="fileInput" class="btn btn-xs btn-default" type="file" ng-model="file" /><br />
+                            </form>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-6 col-sm-6 col-md-6" ng-switch="songSelection">
+                <div ng-switch-when="false"></div>
+                <div ng-switch-default>
+                    <h2>Song Selection</h2>
+                        <ul>
+                        <li novalidate ng-repeat="aSong in songs">
+                            <!--<div class="row">-->
+                                {{aSong.key}}<button class="btn btn-xs btn-default" ng-click="addSong(aSong)">Add</button>
+                            <!--</div>-->
+                        </li>
+                        </ul>
+                </div>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6" ng-switch="songNumber">
+                <div ng-switch-when="0"></div>
+                <div ng-switch-default>
+                    <h2>Song List</h2>
 
-			<div ng-show="logged.loggedin" class="row">
-				<div class="col-xs-6 col-sm-6 col-md-6">
-					<h2>Upload list</h2>
-						
-						<form novalidate> 
-							<input id="fileInput" class="btn btn-xs btn-default" type="file" ng-model="file" /><br />
-						</form>
-						
-				</div>
-			</div>
-			
-		</div>
-	</div>
-	<div class="col-xs-3 col-sm-3 col-md-3">
-		<div ng-controller="SignInCtrl">
-			<div>
-			<a href="" ng-click="signin()">Sign In</a>
-			</div>
-			<div ng-switch on="signinForm.show">
-				<div ng-switch-when="true">
-					<div ng-switch on="error.bool">
-						<div ng-swith-when="true">
-							<p class="text-danger">{{error.description}}</p>
-						</div>
-					</div>
-					<form novalidate>
-						<input type="text" class="form-control" placeholder="Username" autofocus ng-model="user.name" /><br />
-						<input type="password" class="form-control" placeholder="Password" ng-model="user.password" /><br />
-						<input type="password" class="form-control" placeholder="Password Confirmation" ng-model="user.passwordConf" /><br />
-						<button class="btn btn-primary" ng-click="sign(user)">Sign In</button>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
-
-
-</div>
+                        <ul>
+                            <!--<button ng-click="getLists()">load Playlists</button>-->
+                            <li ng-repeat="aSong in songsList">
+                                {{aSong.key}}</br><button class="btn btn-xs btn-default" ng-click="moveUp(aSong)">Move Up</button> <button class="btn btn-xs btn-default" ng-click="moveDown(aSong)">Move Down</button> <button class="btn btn-xs btn-default" ng-click="remSong(aSong)">Remove</button>
+                            </li>
+                        </ul>
+                        <div ng-switch on="logged.show">
+                            <div ng-switch-when="true">
+                            <button class="btn btn-primary" ng-click="saveList()">Save Playlist</button> <button class="btn btn-primary" ng-click="clearList()">Clear Playlist</button>
+                            </div>
+                            <div ng-switch-default>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 <!--{% endraw %}-->

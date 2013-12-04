@@ -1,12 +1,15 @@
 'use strict';
 
+//var musicshareApp = angular.module('musicshareApp', []);
+
 /* Controllers */
 
-function SongSearchCtrl($scope, $http, $document, $timeout){
+baseApp.controller('SongSearchCtrl', function($scope, $http, $document, loginService) {
 	$scope.songsList = [];
 	$scope.playList = [];
 	$scope.songNumber = 0;
 	$scope.loadedLists = [];
+    $scope.logged = new Object();
 	$scope.logged.show = false;
 	$scope.logged.name = "";
 	$scope.songSelection = false;
@@ -14,7 +17,7 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 	$scope.songBeingPlayed = 0;
 	$scope.activeSong = false;
 
-        var baseUrl = "/musicshare/";
+    var baseUrl = "/musicshare/";
 	
 	var audio = $document.find('audio')[0]
 	var fileInput = document.getElementById('fileInput')
@@ -163,32 +166,36 @@ function SongSearchCtrl($scope, $http, $document, $timeout){
 			$scope.songBeingPlayed++;
 			$scope.changeSong();
 			audio.autoplay = true;
-			
 		} else {
 			$scope.songBeingPlayed = 0
 			$scope.changeSong();
 			audio.autoplay = false;
-			
 		}
 	};
 	
 	$scope.changeSong = function() {
 		$scope.activeSong = $scope.songsList[$scope.songBeingPlayed];
 	};
-	
-    var init = function() {
-        $http.get('login/').success(function(data){
-            if(data) {
-                $scope.logged.loggedin = true;
-                $scope.logged.name = user;
-                $scope.getLists();
-            } else {
-                $scope.logged.loggedin = false;
-            }
-        });
-    };
 
-    init();
+    loginService.init(baseUrl + 'login/', function(data){
+        if(data != "None") {
+            $scope.logged.show = true;
+            $scope.logged.name = data;
+            $scope.getLists();
+        } else {
+            $scope.logged.show = false;
+        }
+    });
+
+    loginService.connectCallBack = function(){
+        $scope.logged.show = true;
+        $scope.getLists();
+    }
+
+    loginService.disconnectCallBack = function() {
+        $scope.logged.show = false;
+        $scope.loadedLists = [];
+    }
 	
-}
+});
 
