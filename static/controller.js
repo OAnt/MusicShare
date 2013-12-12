@@ -34,6 +34,8 @@ baseApp.controller('SongSearchCtrl', function($scope, $http, $document, loginSer
 	};
 	
 	$scope.addSong = function(aSong) {
+        //aSong.value = "music_down/" + aSong.value;
+        //aSong = JSON.parse(JSON.stringify(aSong));
 		$scope.songsList.push(aSong);
 		$scope.songNumber++;
 		audio.autoplay = false
@@ -174,6 +176,7 @@ baseApp.controller('SongSearchCtrl', function($scope, $http, $document, loginSer
 	};
 	
 	$scope.changeSong = function() {
+
 		$scope.activeSong = $scope.songsList[$scope.songBeingPlayed];
 	};
 

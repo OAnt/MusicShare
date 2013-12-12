@@ -1,16 +1,11 @@
-<!DOCTYPE html>
-<html ng-app>
-<head>
-<title> MusicShare </title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="/static/angular.js"></script>
-<script src="static/controller.js"></script>
-<link href="/static/css/bootstrap.css" rel="stylesheet">
-</head>
-<!--{% endraw %} used for jinja2 templates with flask-->
-<body class="jumbotron">
 <div>
     <div  ng-controller="SongSearchCtrl" >
+        <div>
+            <h2>Player</h2>
+                <p><audio ng-src="{{'music_down/' + activeSong.value}}" type="audio/mpeg" controls></audio></p>
+                <button class="btn btn-xs btn-default" ng-click="prevSong()">Prev</button><button class="btn btn-xs btn-default" ng-click="nextSong()">Next</button>
+                <p class="text-muted"><b>Song being played:</b> {{activeSong.key}}</p>
+        </div>
         <div class="row">
             <div class="col-xs-4 col-sm-4 col-md-4">
                 <h2>Search Songs</h2>
@@ -21,12 +16,6 @@
                         <button class="btn btn-primary" ng-click="search(description)">Search</button>
                     </form>
 
-            </div>
-            <div class="col-xs-4 col-sm-4 col-md-4">
-                <h2>Player</h2>
-                    <p class="text-muted"><b>Song being played:</b> {{activeSong.key}}</p>
-                    <p><audio ng-src="{{activeSong.value}}" type="audio/mpeg" controls></audio></p>
-                    <button class="btn btn-xs btn-default" ng-click="prevSong()">Prev</button><button class="btn btn-xs btn-default" ng-click="nextSong()">Next</button>
             </div>
 
             <div class="col-xs-4 col-sm-4 col-md-4" ng-switch="playListBool">
@@ -54,7 +43,7 @@
                 <div ng-switch-default>
                     <h2>Song Selection</h2>
                         <ul>
-                        <li novalidate ng-repeat="aSong in songs">
+                        <li novalidate ng-repeat="aSong in songs track by $$index">
                             <!--<div class="row">-->
                                 {{aSong.key}}<button class="btn btn-xs btn-default" ng-click="addSong(aSong)">Add</button>
                             <!--</div>-->
@@ -69,7 +58,7 @@
 
                         <ul>
                             <!--<button ng-click="getLists()">load Playlists</button>-->
-                            <li ng-repeat="aSong in songsList">
+                            <li ng-repeat="aSong in songsList track by $$index">
                                 {{aSong.key}}</br><button class="btn btn-xs btn-default" ng-click="moveUp(aSong)">Move Up</button> <button class="btn btn-xs btn-default" ng-click="moveDown(aSong)">Move Down</button> <button class="btn btn-xs btn-default" ng-click="remSong(aSong)">Remove</button>
                             </li>
                         </ul>
@@ -85,7 +74,3 @@
         </div>
     </div>
 </div>
-</body>
-<!--{% endraw %}-->
-
-</html>

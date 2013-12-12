@@ -42,6 +42,11 @@ urls = (
 
 app = web.application(urls, locals())
 
+song_properties = ("id",
+                   "title",
+                   "album",
+                   "artist",
+                   "value")
 
 def password_hash(password, salt):
     return bcrypt.hashpw(password, salt)
@@ -86,6 +91,7 @@ def dictize_songs(db_res):
     return transmit
 
 def third_search_songs(song_data, database):
+    beg = time.time()
     sql_statement = ["SELECT Songs.id, Songs.song, albums.album, artists.name, Songs.path FROM Songs, albums, artists WHERE Songs.album_id=albums.id AND albums.artist_id=artists.id"]
     values = []
     search_dict = {"Song": " AND Songs.song LIKE ?",
@@ -94,9 +100,13 @@ def third_search_songs(song_data, database):
     for an_attr in song_data:
         sql_statement.append(search_dict[an_attr])
         values.append("%{0}%".format(song_data[an_attr]))
+    print "query: ", time.time() - beg
     result = database.sql_execute("".join(sql_statement), values)
+    print "queried: ", time.time() - beg
     if result:
+        #[dict(zip(song_properties, x)) for x in result]
         transmit = dictize_songs(result)
+        print "dict: ", time.time() - beg
         return transmit
     else:
         return False
@@ -165,9 +175,8 @@ class rplaylist:
 class playlist:
     def GET(self):
         mydata = local_db()
-        
         session_id = web.cookies().get("session_cookie")
-        if session_id:
+        if session_id is not None:
             statement = """
             SELECT username FROM cookies WHERE session_id = ?
             """
@@ -188,7 +197,7 @@ class playlist:
         list_name = json_data[0]
         playlist = json_data[1]
         session_id = web.cookies().get("session_cookie")
-        if session_id:
+        if session_id is not None:
             statement = """
             SELECT username FROM cookies WHERE session_id = ?
             """
@@ -241,12 +250,14 @@ class login:
     def GET(self):
         mydata = local_db()
         session_id = web.cookies().get("session_cookie")
-        if session_id:
+        if session_id is not None:
             statement = """
             SELECT username FROM cookies WHERE session_id = ?
             """
             user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
             return json.dumps(user)
+        else:
+            return "" 
 
     def POST(self):
         mydata = local_db()
@@ -317,7 +328,7 @@ class upload:
         mydata = local_db()
         session_id = web.cookies().get("session_cookie")
         #print session_id
-        if session_id:
+        if session_id is not None:
             statement = """
             SELECT username FROM cookies WHERE session_id = ?
             """
