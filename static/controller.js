@@ -1,10 +1,6 @@
-'use strict';
-
-//var musicshareApp = angular.module('musicshareApp', []);
-
 /* Controllers */
 
-baseApp.controller('SongSearchCtrl', function($scope, $http, $document, loginService) {
+baseApp.controller('SongSearchCtrl', ['$scope','$http', '$document', 'loginService', function($scope, $http, $document, loginService) {
 	$scope.songsList = [];
 	$scope.playList = [];
 	$scope.songNumber = 0;
@@ -200,5 +196,5 @@ baseApp.controller('SongSearchCtrl', function($scope, $http, $document, loginSer
         $scope.loadedLists = [];
     }
 	
-});
+}]);
 

@@ -2,18 +2,18 @@
     <div  ng-controller="SongSearchCtrl" >
         <div>
             <h2>Player</h2>
-                <p><audio ng-src="{{'music_down/' + activeSong.value}}" type="audio/mpeg" controls></audio></p>
+                <p><audio ng-src="{{'music_down/' + activeSong.path}}" type="audio/mpeg" controls></audio></p>
                 <button class="btn btn-xs btn-default" ng-click="prevSong()">Prev</button><button class="btn btn-xs btn-default" ng-click="nextSong()">Next</button>
-                <p class="text-muted"><b>Song being played:</b> {{activeSong.key}}</p>
+                <p class="text-muted"><b>Song being played:</b> {{activeSong.title}}</p>
         </div>
         <div class="row">
-            <div class="col-xs-4 col-sm-4 col-md-4">
+            <div class="col-xs-4 col-sm-4 col-md-4 searchsong">
                 <h2>Search Songs</h2>
                     <form novalidate> 
-                        <input type="text" class="form-control" placeholder="Song" autofocus ng-model="description.Song" /><br />
-                        <input type="text" class="form-control" placeholder="Album" ng-model="description.Album" /><br />
-                        <input type="text" class="form-control" placeholder="Artist" autofocus  ng-model="description.Artist" /><br />
-                        <button class="btn btn-primary" ng-click="search(description)">Search</button>
+                        <input type="text" class="form-control" placeholder="Song" autofocus ng-model="description.Song" />
+                        <input type="text" class="form-control" placeholder="Album" ng-model="description.Album" />
+                        <input type="text" class="form-control" placeholder="Artist" autofocus  ng-model="description.Artist" />
+                        <button class="btn btn-primary" ng-mousedown="search(description)">Search</button>
                     </form>
 
             </div>
@@ -45,7 +45,7 @@
                         <ul>
                         <li novalidate ng-repeat="aSong in songs track by $$index">
                             <!--<div class="row">-->
-                                {{aSong.key}}<button class="btn btn-xs btn-default" ng-click="addSong(aSong)">Add</button>
+                                {{aSong.title + " in " + aSong.album + " by " + aSong.artist}}<button class="btn btn-xs btn-default" ng-click="addSong(aSong)">Add</button>
                             <!--</div>-->
                         </li>
                         </ul>
@@ -59,7 +59,7 @@
                         <ul>
                             <!--<button ng-click="getLists()">load Playlists</button>-->
                             <li ng-repeat="aSong in songsList track by $$index">
-                                {{aSong.key}}</br><button class="btn btn-xs btn-default" ng-click="moveUp(aSong)">Move Up</button> <button class="btn btn-xs btn-default" ng-click="moveDown(aSong)">Move Down</button> <button class="btn btn-xs btn-default" ng-click="remSong(aSong)">Remove</button>
+                                {{aSong.title + " in " + aSong.album + " by " + aSong.artist}}</br><button class="btn btn-xs btn-default" ng-click="moveUp(aSong)">Move Up</button> <button class="btn btn-xs btn-default" ng-click="moveDown(aSong)">Move Down</button> <button class="btn btn-xs btn-default" ng-click="remSong(aSong)">Remove</button>
                             </li>
                         </ul>
                         <div ng-switch on="logged.show">

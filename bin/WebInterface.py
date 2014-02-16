@@ -14,7 +14,7 @@ from Playlist.m3uparser import m3uList
 import MusicShare.utils as utils
 
 
-USRDATABASE = '/home/pi/databases/usrDB3.db'
+USRDATABASE = '/home/pi/databases/USRDB4.db'
 #MUSICDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db'
 COOKIEDATABASE = '/home/pi/databases/cookieDB.db'
 BASESALT = bcrypt.gensalt()
@@ -23,9 +23,9 @@ web.config.debug = False
 render = web.template.render('/home/pi/projects/MusicShare/templates/')
 
 db = utils.simple_db(COOKIEDATABASE)
-with open("/home/pi/projects/MusicShare/cookie.sql", 'r') as c:
-    db.sql_script(c.read())
-db.exit()
+#with open("/home/pi/projects/MusicShare/cookie.sql", 'r') as c:
+#    db.sql_script(c.read())
+#db.exit()
 
 
 song_properties = ['Song', 'Album', 'Artist']
@@ -46,7 +46,7 @@ song_properties = ("id",
                    "title",
                    "album",
                    "artist",
-                   "value")
+                   "path")
 
 def password_hash(password, salt):
     return bcrypt.hashpw(password, salt)
@@ -76,23 +76,11 @@ def json_parser(web_data, attribute_list):
             json_data[an_attr] = ""
     return json_data
 
-def dictize_songs(db_res):
-    transmit = []
-    for element in db_res:
-        temp_dict = {}
-        temp_str = " in ".join([element[1].title(),
-                            element[2].title()])
-        temp_str = " by ".join([temp_str,
-                            element[3].title()])
-        temp_dict["key"] = temp_str
-        temp_dict["value"] = element[4]
-        temp_dict["id"] = element[0]
-        transmit.append(temp_dict)
-    return transmit
+def dictize_songs(result):
+    return [dict(zip(song_properties, x)) for x in result]
 
 def third_search_songs(song_data, database):
-    beg = time.time()
-    sql_statement = ["SELECT Songs.id, Songs.song, albums.album, artists.name, Songs.path FROM Songs, albums, artists WHERE Songs.album_id=albums.id AND albums.artist_id=artists.id"]
+    sql_statement = ["SELECT Songs.id as id, Songs.song as title, albums.album as album, artists.name as artist, Songs.path as path FROM Songs, albums, artists WHERE Songs.album_id=albums.id AND albums.artist_id=artists.id"]
     values = []
     search_dict = {"Song": " AND Songs.song LIKE ?",
                     "Album": " AND albums.album LIKE ?",
@@ -100,41 +88,6 @@ def third_search_songs(song_data, database):
     for an_attr in song_data:
         sql_statement.append(search_dict[an_attr])
         values.append("%{0}%".format(song_data[an_attr]))
-    print "query: ", time.time() - beg
-    result = database.sql_execute("".join(sql_statement), values)
-    print "queried: ", time.time() - beg
-    if result:
-        #[dict(zip(song_properties, x)) for x in result]
-        transmit = dictize_songs(result)
-        print "dict: ", time.time() - beg
-        return transmit
-    else:
-        return False
-
-def search_songs(song_title, song_album, song_artist, database):
-    sql_statement = ["SELECT * FROM Songs"]
-    values = []
-    multiple = False
-    if song_title:
-        sql_statement.append(" WHERE Song LIKE ?")
-        values.append("%{0}%".format(song_title))
-        multiple = True
-        
-    if song_album and multiple:
-        sql_statement.append(" AND Album LIKE ?")
-        values.append("%{0}%".format(song_album))
-    elif song_album and not multiple:
-        sql_statement.append(" WHERE Album LIKE ?")
-        values.append("%{0}%".format(song_album))
-        multiple = True
-        
-    if song_artist and multiple:
-        sql_statement.append(" AND Artist LIKE ?")
-        values.append("%{0}%".format(song_artist))
-    elif song_artist and not multiple:
-        sql_statement.append(" WHERE Artist LIKE ?")
-        values.append("%{0}%".format(song_artist))
-    
     result = database.sql_execute("".join(sql_statement), values)
     if result:
         transmit = dictize_songs(result)
@@ -147,12 +100,17 @@ class index:
         return render.index()
 
     def POST(self):
+        #beg = time.time()
         mydata = local_db()
+        #print "connection: ", time.time() - beg
         #json_data = json_parser(web.data(), song_properties)
         json_data = json.loads(web.data())
-        print json_data
+        #print json_data
+        #print "parse: ", time.time() - beg
         transmit = third_search_songs(json_data,
                                 mydata.database)
+        web.header("Content-type", "application/json")
+        #print "queried: ", time.time() - beg
         return json.dumps(transmit)
 
 class rplaylist:
@@ -304,24 +262,16 @@ class signin:
     def POST(self):
         mydata = local_db()
         json_data = json_parser(web.data(), ["name", "password"])
-        
-        statement = """
-        SELECT * FROM users WHERE name = ?;
-        """
-        
-        result = mydata.database.sql_execute(statement, [json_data["name"]])
-        
-        if not result:
-            comp_hash, salt = cred_gen(json_data["password"].encode("UTF-8"))
-            statement = """
-            INSERT INTO users (name, hash, salt) VALUES (?, ?, ?);
-            """
+        statement = "INSERT INTO users (name, hash, salt) VALUES (?, ?, ?);"
+        comp_hash, salt = cred_gen(json_data["password"].encode("UTF-8"))
+        try:
             mydata.database.sql_execute(statement, [json_data["name"],
                                                     comp_hash,
                                                     salt])
-            return "true"
-        else:
-            return "false"
+            return "True"
+        except sqlite3.IntegrityError as e:
+            print e
+            return "False"
 
 class upload:
     def POST(self):
@@ -329,9 +279,7 @@ class upload:
         session_id = web.cookies().get("session_cookie")
         #print session_id
         if session_id is not None:
-            statement = """
-            SELECT username FROM cookies WHERE session_id = ?
-            """
+            statement = "SELECT username FROM cookies WHERE session_id = ?"
             user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
             #print user
 
@@ -347,16 +295,11 @@ class upload:
                     song_list.append(item)
             #print song_list
             list_name = "list"+str(time.time())
-            statement = """
-            INSERT INTO playlist (name,  owner) VALUES (?,?);
-            """
+            statement = "INSERT INTO playlist (name,  owner) VALUES (?,?);"
             result = mydata.database.sql_execute(statement, 
                                                     [list_name,
                                                     user])
-            statement = """
-            SELECT id FROM playlist where name = ? and owner = ?;
-            """
-
+            statement = "SELECT id FROM playlist where name = ? and owner = ?;"
             result = mydata.database.sql_execute(statement, 
                     [list_name,
                     user])
@@ -379,7 +322,7 @@ class upload:
             
 def header_processor(handle):
     web.header("Access-Control-Allow-Credentials", "true")
-    web.header("Cache-Control", "No-Cache")
+    #web.header("Cache-Control", "No-Cache")
     return handle()
     
 app.add_processor(header_processor)
