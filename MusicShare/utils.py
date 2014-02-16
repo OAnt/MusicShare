@@ -20,6 +20,7 @@ class simple_db(object):
         self.database = sqlite3.connect(database)
         #self.database.row_factory = dict_factory
         self.db_cursor = self.database.cursor()
+        self.sql_execute("PRAGMA foreign_keys = ON", [])
     
     def exit(self):
         self.database.close()

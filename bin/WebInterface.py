@@ -7,6 +7,7 @@ import json
 import random
 import time
 
+
 import bcrypt
 from web import form
 
@@ -15,18 +16,10 @@ import MusicShare.utils as utils
 
 
 USRDATABASE = '/home/pi/databases/USRDB4.db'
-#MUSICDATABASE = '/Users/Antoine/Documents/Pn/projects/databases/MusicMac.db'
-COOKIEDATABASE = '/home/pi/databases/cookieDB.db'
 BASESALT = bcrypt.gensalt()
 web.config.debug = False
 
 render = web.template.render('/home/pi/projects/MusicShare/templates/')
-
-db = utils.simple_db(COOKIEDATABASE)
-#with open("/home/pi/projects/MusicShare/cookie.sql", 'r') as c:
-#    db.sql_script(c.read())
-#db.exit()
-
 
 song_properties = ['Song', 'Album', 'Artist']
 
@@ -60,9 +53,17 @@ def local_db():
     mydata = threading.local()
     if not hasattr(mydata, "database"):
         mydata.database = utils.simple_db(USRDATABASE)
-    if not hasattr(mydata, "cookieDB"):
-        mydata.cookieDB = utils.simple_db(COOKIEDATABASE)
     return mydata
+
+def get_user(session_id, database):
+    try:
+        statement = """
+        SELECT username FROM cookies WHERE session_id = ?
+        """
+        user = database.sql_execute(statement, [session_id])[0][0]
+        return user
+    except IndexError as e:
+        return None 
 
 def json_parser(web_data, attribute_list):
     if web_data:
@@ -134,12 +135,8 @@ class playlist:
     def GET(self):
         mydata = local_db()
         session_id = web.cookies().get("session_cookie")
-        if session_id is not None:
-            statement = """
-            SELECT username FROM cookies WHERE session_id = ?
-            """
-            user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
-
+        user = get_user(session_id, mydata.database)
+        if user is not None:
             statement = """
             SELECT id, name FROM playlist WHERE owner = ?;
             """
@@ -155,12 +152,8 @@ class playlist:
         list_name = json_data[0]
         playlist = json_data[1]
         session_id = web.cookies().get("session_cookie")
-        if session_id is not None:
-            statement = """
-            SELECT username FROM cookies WHERE session_id = ?
-            """
-            user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
-            #print list_name, playlist
+        user = get_user(session_id, mydata.database)
+        if user is not None:
             statement = """
             INSERT INTO playlist (name, owner) VALUES (?,?);
             """
@@ -193,26 +186,21 @@ class playlist:
     def DELETE(self):
         mydata = local_db()
         i = web.input(id=None)
-        statement = """
-        DELETE FROM playlist WHERE id = ?;
-        """
-        mydata.database.sql_execute(statement, 
-                                    [i.id])
-        statement = """
-        DELETE FROM belong where playlist = ?;
-        """
-        mydata.database.sql_execute(statement, 
-                                    [i.id])
-            
+        session_id = web.cookies().get("session_cookie")
+        user = get_user(session_id, mydata.database)
+        if user is not None:
+            statement = """
+            DELETE FROM playlist WHERE id = ? AND owner=?;
+            """
+            mydata.database.sql_execute(statement, 
+                                        [i.id, user])
+
 class login:
     def GET(self):
         mydata = local_db()
         session_id = web.cookies().get("session_cookie")
-        if session_id is not None:
-            statement = """
-            SELECT username FROM cookies WHERE session_id = ?
-            """
-            user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
+        user = get_user(session_id, mydata.database)
+        if user is not None:
             return json.dumps(user)
         else:
             return "" 
@@ -243,7 +231,7 @@ class login:
             statement = """
             INSERT INTO cookies (username, session_id) VALUES (?, ?)
             """
-            mydata.cookieDB.sql_execute(statement, [username, session_id])
+            mydata.database.sql_execute(statement, [username, session_id])
             #print "cookie db", time.time() - beg
             web.setcookie("session_cookie", session_id, expires="3600", secure=True)
             return "True"
@@ -255,7 +243,7 @@ class logout:
         mydata = local_db()
         session_id = web.cookies().get("session_cookie")
         statement = "DELETE FROM cookies WHERE session_id = ?"
-        mydata.cookieDB.sql_execute(statement, [session_id])
+        mydata.database.sql_execute(statement, [session_id])
         web.setcookie("session_cookie", "", expires=-1)
             
 class signin:
@@ -278,11 +266,8 @@ class upload:
         mydata = local_db()
         session_id = web.cookies().get("session_cookie")
         #print session_id
-        if session_id is not None:
-            statement = "SELECT username FROM cookies WHERE session_id = ?"
-            user = mydata.cookieDB.sql_execute(statement, [session_id])[0][0]
-            #print user
-
+        user = get_user(session_id, mydata.database)
+        if user is not None:
             playlist = web.data()
             parser = m3uList()
             parser.parse(playlist)
